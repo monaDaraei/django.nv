@@ -101,6 +101,9 @@ workflows:
       - oast:
           requires:
             - test
+      - oast-frontend:
+          requires:
+            - test
       - secret_scanning:
           requires:
             - test
