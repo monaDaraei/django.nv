@@ -83,6 +83,19 @@ jobs:
             exit 1
           when: on_fail                    # Even if the job fails, continue to the next stages
 
+  zap_baseline:
+    machine: true
+    steps:
+      - checkout
+
+      - run: |
+          docker pull owasp/zap2docker-stable:2.10.0
+          docker run --user root --rm -v $(pwd):/zap/wrk:rw -w /zap owasp/zap2docker-stable:2.10.0 zap-baseline.py -t ${PROD_URL} -J zap-output.json
+
+      - store_artifacts:
+          path: zap-output.json
+          destination: zap-artifact
+          
   prod:
     docker:
       - image: python:3.6
@@ -113,6 +126,9 @@ workflows:
       - integration:
           requires:
             - oast
+      - zap_baseline:
+          requires:
+            - integration
       - prod:
           type: approval
           requires:
