@@ -45,6 +45,20 @@ jobs:
           destination: retirejs-artifact
           when: always
 
+  secret_scanning:
+    machine: true
+    steps:
+      - checkout
+
+      - run:
+          command: docker run --rm -v $(pwd):/src hysnsec/trufflehog file:///src --json > trufflehog-output.json
+          when: on_fail             # Even if the job fails, continue to the next stages
+
+      - store_artifacts:
+          path: trufflehog-output.json
+          destination: trufflehog-artifact
+          when: always
+  
   integration:
     docker:
       - image: python:3.6
@@ -72,6 +86,9 @@ workflows:
           requires:
             - build
       - oast:
+          requires:
+            - test
+      - secret_scanning:
           requires:
             - test
       - integration:
